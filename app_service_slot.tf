@@ -1,12 +1,13 @@
 resource "azurerm_app_service_slot" "main" {
   count               = var.is_blue_green_deployment_enabled ? 1 : 0
-  name                = ${var.environment}-${var.app_service_name}-${var.region}-slot
+  name                = "app-rc"
   app_service_name    = azurerm_app_service.main.name
   location            = data.azurerm_resource_group.rg.location
   resource_group_name = data.azurerm_resource_group.rg.name
   app_service_plan_id = azurerm_app_service_plan.main.id
   app_settings        = var.app_service_settings
   https_only          = var.app_service_https_only
+  tags                = var.default_tags
   site_config {
     always_on                 = var.app_service_always_on
     app_command_line          = var.app_service_app_command_line
