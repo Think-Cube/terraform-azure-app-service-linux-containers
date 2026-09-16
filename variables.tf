@@ -1,210 +1,222 @@
-variable "environment" {
-  description = "The environment name used for backend container name key (e.g., dev, prod)."
-  type        = string
-  default     = "dev"
-}
-
-variable "default_tags" {
-  description = "A mapping of tags to assign to the resource, useful for resource organization and management."
-  type        = map(any)
-}
-
-variable "region" {
-  description = "The Azure region in which the resources are deployed. Example: 'weu' for West Europe."
-  type        = string
-  default     = "weu"
-}
-
-variable "resource_group_location" {
-  description = "The location/region where the resource group is created. Changing this forces a new resource to be created."
-  default     = "West Europe"
+variable "name" {
+  description = "The name of the Linux Web App. Changing this forces a new resource to be created."
   type        = string
 }
 
 variable "resource_group_name" {
-  description = "The name of the resource group in which to create the resource."
+  description = "The name of the resource group in which to create the Linux Web App."
   type        = string
 }
 
-variable "app_service_plan_name" {
-  description = "Specifies the name of the App Service Plan component. Changing this forces a new resource to be created."
+variable "location" {
+  description = "The Azure region where the Linux Web App will be created."
   type        = string
 }
 
-variable "app_service_plan_kind" {
-  description = "The kind of the App Service Plan to create. Possible values are Windows (also available as App), Linux, elastic (for Premium Consumption), and FunctionApp (for a Consumption Plan). Defaults to Windows."
+variable "service_plan_id" {
+  description = "The ID of the Service Plan in which to run this Linux Web App."
   type        = string
-  default     = "Linux"
 }
 
-variable "app_service_plan_reserved" {
-  description = "Indicates whether this App Service Plan is Reserved. Defaults to false."
+variable "app_settings" {
+  description = "A map of key-value pairs of App Settings to assign to the Linux Web App."
+  type        = map(string)
+  default     = {}
+}
+
+variable "client_affinity_enabled" {
+  description = "Whether client affinity is enabled for the Linux Web App."
+  type        = bool
+  default     = null
+}
+
+variable "client_certificate_enabled" {
+  description = "Whether client certificate authentication is enabled for the Linux Web App."
+  type        = bool
+  default     = null
+}
+
+variable "client_certificate_mode" {
+  description = "The Client Certificate mode for the Linux Web App. Possible values are 'Required', 'Optional', and 'OptionalInteractiveUser'."
+  type        = string
+  default     = null
+}
+
+variable "enabled" {
+  description = "Whether the Linux Web App is enabled. Defaults to true."
   type        = bool
   default     = true
 }
 
-variable "app_service_plan_tier" {
-  description = "Specifies the pricing tier of the App Service Plan. Valid options are Free, Shared, Basic, Standard, PremiumV2, and Isolated."
-  type        = string
-  default     = "Basic"
-}
-
-variable "app_service_plan_size" {
-  description = "The size specifier of the resource SKU. Available sizes include F1 (Free), D1 (Shared), B1 (Basic Small), S1 (Standard Small), and many others. See full list for details."
-  type        = string
-  default     = "S1"
-}
-
-variable "app_service_name" {
-  description = "The name of the App Service (web application)."
-  type        = string
-}
-
-variable "app_service_settings" {
-  description = "A map of key-value pairs to configure App Settings for the App Service."
-  type        = map(any)
-  default     = {}
-}
-
-variable "app_service_https_only" {
-  description = "Indicates whether the App Service should only be accessible via HTTPS. Defaults to false."
+variable "https_only" {
+  description = "Whether the Linux Web App should only be accessible via HTTPS. Defaults to false."
   type        = bool
   default     = false
 }
 
-variable "app_service_always_on" {
-  description = "Indicates whether the App Service should always be running. Defaults to false."
+variable "public_network_access_enabled" {
+  description = "Whether public network access is enabled for the Linux Web App. Defaults to true."
   type        = bool
-  default     = false
+  default     = true
 }
 
-variable "app_service_app_command_line" {
-  description = "The command line to launch the app in the App Service. Can be left empty."
+variable "virtual_network_subnet_id" {
+  description = "The ID of the subnet to place the Linux Web App in for virtual network integration."
   type        = string
-  default     = ""
+  default     = null
 }
 
-variable "app_service_ftps_state" {
-  description = "State of FTP / FTPS service for this App Service. Possible values include: AllAllowed, FtpsOnly, and Disabled."
+variable "zip_deploy_file" {
+  description = "The local path of a zip package to deploy to the Linux Web App."
   type        = string
-  default     = "FtpsOnly"
+  default     = null
 }
 
-variable "app_service_http2_enabled" {
-  description = "Indicates whether HTTP2 is enabled on this App Service. Defaults to false."
-  type        = bool
-  default     = false
+variable "site_config" {
+  description = "Site configuration block for the Linux Web App."
+  type = object({
+    always_on                                     = optional(bool)
+    container_registry_use_managed_identity       = optional(bool)
+    container_registry_managed_identity_client_id = optional(string)
+    http2_enabled                                 = optional(bool)
+    minimum_tls_version                           = optional(string)
+    scm_minimum_tls_version                       = optional(string)
+    health_check_path                             = optional(string)
+    health_check_eviction_time_in_min             = optional(number)
+    application_stack = optional(object({
+      docker_image_name        = optional(string)
+      docker_registry_url      = optional(string)
+      docker_registry_username = optional(string)
+      docker_registry_password = optional(string)
+    }))
+    cors = optional(object({
+      allowed_origins     = optional(list(string))
+      support_credentials = optional(bool)
+    }))
+    ip_restrictions = optional(list(object({
+      ip_address                = optional(string)
+      service_tag               = optional(string)
+      virtual_network_subnet_id = optional(string)
+      name                      = optional(string)
+      priority                  = optional(number)
+      action                    = optional(string)
+    })), [])
+  })
+  default = {}
 }
 
-variable "app_service_linux_fx_version" {
-  description = "Specifies the Linux App Framework and version for the App Service."
-  type        = string
+variable "identity" {
+  description = "Identity configuration block for the Linux Web App."
+  type = object({
+    type         = string
+    identity_ids = optional(list(string))
+  })
+  default = null
 }
 
-variable "app_service_min_tls_version" {
-  description = "The minimum supported TLS version for the App Service. Possible values are 1.0, 1.1, and 1.2. Defaults to 1.2 for new app services."
-  type        = string
-  default     = "1.2"
+variable "auth_settings_v2" {
+  description = "Auth settings v2 configuration block for the Linux Web App."
+  type = object({
+    auth_enabled           = bool
+    runtime_version        = optional(string)
+    config_file_path       = optional(string)
+    require_authentication = optional(bool)
+    unauthenticated_action = optional(string)
+    login = optional(object({
+      token_store_enabled               = optional(bool)
+      token_refresh_extension_time      = optional(number)
+      token_store_path                  = optional(string)
+      token_store_sas_setting_name      = optional(string)
+      preserve_url_fragments_for_logins = optional(bool)
+      allowed_external_redirect_urls    = optional(list(string))
+      cookie_expiration_convention      = optional(string)
+      cookie_expiration_time            = optional(string)
+      validate_nonce                    = optional(bool)
+      nonce_expiration_time             = optional(string)
+      logout_endpoint                   = optional(string)
+    }))
+  })
+  default = null
 }
 
-variable "app_service_use_32_bit_worker_process" {
-  description = "Indicates whether the App Service should run in 32-bit mode rather than 64-bit mode."
-  type        = bool
-  default     = false
-}
-
-variable "app_service_websockets_enabled" {
-  description = "Indicates whether WebSockets should be enabled for the App Service."
-  type        = bool
-  default     = false
-}
-
-variable "ip_restrictions" {
-  description = "A list of IP addresses allowed to access the App Service."
-  type = list(object({
-    name    = string
-    cidr_ip = string
-  }))
-  default = []
+variable "backup" {
+  description = "Backup configuration block for the Linux Web App."
+  type = object({
+    name                = string
+    storage_account_url = string
+    enabled             = optional(bool)
+    schedule = object({
+      frequency_interval       = number
+      frequency_unit           = string
+      keep_at_least_one_backup = optional(bool)
+      retention_period_days    = optional(number)
+      start_time               = optional(string)
+    })
+  })
+  default = null
 }
 
 variable "connection_strings" {
-  description = "A collection of connection string objects to create with the App Service."
-  default     = []
+  description = "A list of connection string objects to create with the Linux Web App."
   type = list(object({
     name  = string
     type  = string
     value = string
   }))
+  default = []
 }
 
-variable "application_logs_file_system_level" {
-  description = "The log level for filesystem-based logging. Supported values are Error, Information, Verbose, Warning, and Off. Defaults to Off."
-  default     = "Off"
-  type        = string
+variable "logs" {
+  description = "Logs configuration block for the Linux Web App."
+  type = object({
+    detailed_error_messages = optional(bool)
+    failed_request_tracing  = optional(bool)
+    application_logs = optional(object({
+      file_system_level = string
+      azure_blob_storage = optional(object({
+        level             = string
+        sas_url           = string
+        retention_in_days = optional(number)
+      }))
+    }))
+    http_logs = optional(object({
+      azure_blob_storage = optional(object({
+        sas_url           = string
+        retention_in_days = optional(number)
+      }))
+      file_system = optional(object({
+        retention_in_days = number
+        retention_in_mb   = number
+      }))
+    }))
+  })
+  default = null
 }
 
-variable "is_blue_green_deployment_enabled" {
-  description = "Indicates whether this App Service uses a deployment slot to perform blue-green deployments."
-  default     = false
-  type        = bool
+variable "sticky_settings" {
+  description = "Sticky settings configuration block for the Linux Web App."
+  type = object({
+    app_setting_names       = optional(list(string))
+    connection_string_names = optional(list(string))
+  })
+  default = null
 }
 
-variable "app_settings" {
-  description = "A key-value pair of App Settings to configure the App Service."
+variable "storage_accounts" {
+  description = "A list of storage account mounts for the Linux Web App."
+  type = list(object({
+    access_key   = string
+    account_name = string
+    name         = string
+    share_name   = string
+    type         = string
+    mount_path   = optional(string)
+  }))
+  default = []
+}
+
+variable "tags" {
+  description = "Tags to assign to resources."
+  type        = map(string)
   default     = {}
-}
-
-variable "docker_registry_server_url" {
-  description = "The URL that can be used to log into the container registry."
-  type        = string
-  default     = null
-}
-
-variable "docker_registry_server_username" {
-  description = "The Username associated with the Container Registry Admin account (if enabled)."
-  type        = string
-  default     = null
-}
-
-variable "docker_registry_server_password" {
-  description = "The Password associated with the Container Registry Admin account (if enabled)."
-  type        = string
-  default     = null
-}
-
-variable "app_service_auth_settings" {
-  description = "Indicates whether authentication is enabled for the App Service."
-  type        = bool
-  default     = false
-}
-
-variable "identity_settings" {
-  description = "A list of identity settings for the App Service."
-  type = list(object({
-    type = string
-    # Add other identity attributes as needed
-  }))
-  default = []
-}
-
-variable "client_cert_enabled" {
-  description = "Indicates whether client certificate authentication is enabled for the App Service."
-  type        = bool
-  default     = false
-}
-
-variable "auth_settings" {
-  description = "A list of authentication settings for the App Service."
-  type = list(object({
-    enabled = bool
-    # Add other auth_settings attributes as needed
-  }))
-  default = []
-}
-
-variable "default_documents" {
-  description = "A list of default documents for the App Service."
-  type        = list(string)
-  default     = []
 }
